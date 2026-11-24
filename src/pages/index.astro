@@ -1,0 +1,793 @@
+---
+import Base from '../layouts/Base.astro';
+import Phone from '../components/Phone.astro';
+import Browser from '../components/Browser.astro';
+import { profile, stats, projects, backendProjects, experience, skills, education } from '../data/site';
+
+const heroScreens = projects.find((p) => p.title === 'Food Ninja')?.screens ?? [];
+
+// Decorative QR-style grid (21x21) with the three finder squares.
+const N = 21;
+const finder = (r: number, c: number) => {
+  for (const [r0, c0] of [[0, 0], [0, N - 7], [N - 7, 0]]) {
+    if (r >= r0 && r < r0 + 7 && c >= c0 && c < c0 + 7) {
+      const y = r - r0, x = c - c0;
+      const ring = y === 0 || y === 6 || x === 0 || x === 6;
+      const core = y >= 2 && y <= 4 && x >= 2 && x <= 4;
+      return ring || core ? 1 : 0;
+    }
+  }
+  return -1;
+};
+let seed = 7;
+const rand = () => (seed = (seed * 9301 + 49297) % 233280) / 233280;
+const qr = Array.from({ length: N * N }, (_, i) => {
+  const f = finder(Math.floor(i / N), i % N);
+  return f === -1 ? (rand() > 0.52 ? 1 : 0) : f;
+});
+const year = new Date().getFullYear();
+---
+
+<Base>
+  <header class="nav">
+    <div class="wrap nav-inner">
+      <a href="#top" class="brand">{profile.name}</a>
+      <nav aria-label="Main">
+        <a href="#work">Work</a>
+        <a href="#experience">Experience</a>
+        <a href="#contact" class="nav-cta">Contact</a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="top">
+    <section class="hero wrap">
+      <div class="hero-copy">
+        <p class="status"><span class="dot" aria-hidden="true"></span>{profile.availability}</p>
+        <h1>
+          {profile.headline}<br />
+          <span class="accent">{profile.tagline}</span>
+        </h1>
+        <p class="lede">{profile.summary}</p>
+        <div class="actions">
+          <a class="btn primary" href={`mailto:${profile.email}`}>Email me</a>
+          <a class="btn" href={profile.github} target="_blank" rel="noopener">
+            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 .5a11.5 11.5 0 0 0-3.64 22.41c.58.1.79-.25.79-.56v-2c-3.2.7-3.88-1.37-3.88-1.37-.52-1.33-1.28-1.690-1.28-1.69-1.05-.72.08-.7.08-.7 1.16.08 1.77 1.19 1.77 1.19 1.030 1.77 2.7 1.26 3.36.96.1-.75.4-1.26.73-1.55-2.55-.29-5.24-1.28-5.24-5.69 0-1.26.45-2.29 1.19-3.1-.12-.29-.52-1.46.11-3.05 0 0 .97-.31 3.17 1.18a11 11 0 0 1 5.77 0c2.2-1.49 3.17-1.18 3.17-1.18.63 1.59.23 2.76.11 3.05.74.81 1.19 1.84 1.19 3.1 0 4.42-2.7 5.39-5.26 5.68.41.36.78 1.06.78 2.14v3.17c0 .31.21.67.8.56A11.5 11.5 0 0 0 12 .5Z"/></svg>
+            GitHub
+          </a>
+          <a class="btn" href={profile.linkedin} target="_blank" rel="noopener">
+            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M20.45 20.45h-3.56v-5.57c0-1.33-.02-3.04-1.85-3.04-1.86 0-2.14 1.45-2.14 2.94v5.67H9.35V9h3.41v1.56h.05c.48-.9 1.64-1.850 3.37-1.85 3.6 0 4.27 2.37 4.27 5.46v6.28ZM5.34 7.43a2.06 2.06 0 1 1 0-4.13 2.06 2.06 0 0 1 0 4.13ZM7.12 20.45H3.56V9h3.56v11.45ZM22.22 0H1.77C.79 0 0 .77 0 1.73v20.54C0 23.23.79 24 1.77 24h20.45c.98 0 1.78-.77 1.78-1.73V1.73C24 .77 23.2 0 22.22 0Z"/></svg>
+            LinkedIn
+          </a>
+        </div>
+        <p class="loc eyebrow">{profile.location}</p>
+      </div>
+
+      <div class="hero-phones" aria-hidden="true">
+        {heroScreens.map((s, i) => <Phone src={s} alt="" class={`hp hp-${i + 1}`} eager />)}
+      </div>
+    </section>
+
+    <section class="stats wrap" aria-label="At a glance">
+      {stats.map((s) => (
+        <div class="stat">
+          <p class="stat-v">{s.value}</p>
+          <p class="stat-l">{s.label}</p>
+        </div>
+      ))}
+    </section>
+
+    <section id="work" class="work wrap">
+      <div class="section-head">
+        <p class="eyebrow">Selected work</p>
+        <h2>Apps I've built and shipped.</h2>
+      </div>
+
+      {projects.map((p, i) => (
+        <article class:list={['project', `k-${p.kind}`]} data-reveal>
+          <div class="p-info">
+            <p class="p-num eyebrow">{String(i + 1).padStart(2, '0')}{p.year && ` / ${p.year}`}</p>
+            <h3>{p.title}</h3>
+            <p class="p-sum">{p.summary}</p>
+            {(p.role || p.stack.length > 0) && (
+              <dl class="p-meta">
+                {p.role && (<><dt>Role</dt><dd>{p.role}</dd></>)}
+                {p.stack.length > 0 && (<><dt>Stack</dt><dd>{p.stack.join(', ')}</dd></>)}
+              </dl>
+            )}
+            {p.links && (
+              <div class="p-links">
+                {p.links.map((l) => (
+                  <a class="btn" href={l.href} target="_blank" rel="noopener">
+                    {l.label}
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg>
+                  </a>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <div class="p-visual">
+            {p.kind === 'mobile' && p.screens && (
+              <div class="phones">
+                {p.screens.map((s, j) => <Phone src={s} alt={`${p.title} screen ${j + 1}`} />)}
+              </div>
+            )}
+            {p.kind === 'web' && p.screens && <Browser src={p.screens[0]} alt={`${p.title} screenshot`} />}
+            {p.kind === 'qr' && (
+              <div class="phones">
+                <div class="qr-card">
+                  <div class="qr" style={`--n:${N}`} aria-hidden="true">
+                    {qr.map((v) => <i class={v ? 'on' : ''}></i>)}
+                  </div>
+                  <p class="qr-cap">Scan at the table</p>
+                </div>
+                {p.screens?.map((s, j) => <Phone src={s} alt={`${p.title} screen ${j + 1}`} />)}
+              </div>
+            )}
+          </div>
+        </article>
+      ))}
+
+      <div class="backend" data-reveal>
+        <div class="section-head small">
+          <p class="eyebrow">Backend work</p>
+          <h2>APIs and services.</h2>
+        </div>
+        <div class="b-grid">
+          {backendProjects.map((p) => (
+            <article class="b-card">
+              <Browser src={p.screens![0]} alt={`${p.title} API documentation`} compact />
+              <div class="b-body">
+                <h3>{p.title}</h3>
+                <p>{p.summary}</p>
+                <div class="b-stack">{p.stack.map((t) => <span class="chip">{t}</span>)}</div>
+                <div class="b-links">
+                  {p.links?.map((l) => (
+                    <a href={l.href} target="_blank" rel="noopener">{l.label} <span aria-hidden="true">↗</span></a>
+                  ))}
+                </div>
+              </div>
+            </article>
+          ))}
+        </div>
+      </div>
+    </section>
+
+    <section id="experience" class="exp wrap">
+      <div class="section-head">
+        <p class="eyebrow">Experience</p>
+        <h2>Where I've worked.</h2>
+      </div>
+      <ol class="exp-list">
+        {experience.map((e) => (
+          <li class="exp-item" data-reveal>
+            <div class="exp-head">
+              <h3>{e.role} <span class="at">at {e.company}</span></h3>
+              <p class="exp-where">
+                {e.current && <span class="now">Now</span>}
+                {e.where}
+              </p>
+            </div>
+            <ul>
+              {e.points.map((pt) => <li>{pt}</li>)}
+            </ul>
+          </li>
+        ))}
+      </ol>
+    </section>
+
+    <section id="skills" class="skills wrap">
+      <div class="section-head">
+        <p class="eyebrow">Toolkit</p>
+        <h2>What I work with.</h2>
+      </div>
+      <div class="s-grid">
+        {skills.map((s) => (
+          <div class="s-group">
+            <p class="eyebrow">{s.group}</p>
+            <div class="s-items">{s.items.map((it) => <span class="chip">{it}</span>)}</div>
+          </div>
+        ))}
+        <div class="s-group">
+          <p class="eyebrow">Education</p>
+          <p class="edu">{education.degree}<br /><span>{education.school} · {education.year}</span></p>
+        </div>
+      </div>
+    </section>
+
+    <section id="contact" class="contact wrap" data-reveal>
+      <p class="eyebrow">Contact</p>
+      <h2>Have an app to build or a team to join?</h2>
+      <a class="mail" href={`mailto:${profile.email}`}>{profile.email}</a>
+      <div class="actions">
+        <a class="btn" href={profile.github} target="_blank" rel="noopener">GitHub</a>
+        <a class="btn" href={profile.linkedin} target="_blank" rel="noopener">LinkedIn</a>
+      </div>
+    </section>
+  </main>
+
+  <footer class="foot wrap">
+    <p>© {year} {profile.name}</p>
+    <p>{profile.location}</p>
+  </footer>
+</Base>
+
+<style>
+  .nav {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    background: rgba(11, 11, 10, 0.78);
+    backdrop-filter: saturate(140%) blur(14px);
+    -webkit-backdrop-filter: saturate(140%) blur(14px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  }
+  .nav-inner {
+    height: 64px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .brand {
+    font-family: var(--mono);
+    font-size: 13px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    text-decoration: none;
+  }
+  .nav nav {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .nav nav a {
+    font-size: 15px;
+    color: var(--text-2);
+    text-decoration: none;
+    padding: 8px 12px;
+    border-radius: 999px;
+    transition: color 0.2s;
+  }
+  .nav nav a:hover {
+    color: var(--text);
+  }
+  .nav nav a.nav-cta {
+    color: var(--text);
+    border: 1px solid var(--line-strong);
+  }
+  @media (max-width: 560px) {
+    .brand {
+      font-size: 12px;
+    }
+    .nav nav a:not(.nav-cta) {
+      display: none;
+    }
+  }
+
+  .hero {
+    display: grid;
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
+    gap: 48px;
+    align-items: center;
+    min-height: min(860px, calc(100svh - 64px));
+    padding-block: 64px 48px;
+  }
+  .status {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 14px;
+    color: var(--text-2);
+    padding: 6px 14px 6px 10px;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    margin-bottom: 28px;
+  }
+  .dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #53e88b;
+    box-shadow: 0 0 0 4px rgba(83, 232, 139, 0.15);
+  }
+  h1 {
+    font-size: clamp(44px, 6vw, 84px);
+    line-height: 0.98;
+    letter-spacing: -0.04em;
+  }
+  .accent {
+    display: inline-block;
+    margin-top: 0.25em;
+    font-size: 0.56em;
+    line-height: 1.08;
+    letter-spacing: -0.03em;
+    color: var(--accent);
+    max-width: 16ch;
+  }
+  .lede {
+    margin-top: 28px;
+    max-width: 54ch;
+    color: var(--text-2);
+    font-size: 18px;
+  }
+  .actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 32px;
+  }
+  .loc {
+    margin-top: 28px;
+  }
+
+  .hero-phones {
+    position: relative;
+    height: 600px;
+  }
+  .hero-phones :global(.hp) {
+    position: absolute;
+    width: 230px;
+    top: 50%;
+    left: 50%;
+  }
+  .hero-phones :global(.hp-1) {
+    transform: translate(-125%, -46%) rotate(-7deg);
+    z-index: 1;
+  }
+  .hero-phones :global(.hp-2) {
+    transform: translate(-50%, -54%);
+    z-index: 3;
+  }
+  .hero-phones :global(.hp-3) {
+    transform: translate(25%, -46%) rotate(7deg);
+    z-index: 2;
+  }
+  @media (max-width: 900px) {
+    .hero {
+      grid-template-columns: 1fr;
+      min-height: 0;
+      padding-top: 40px;
+    }
+    .hero-phones {
+      height: 440px;
+      margin-top: 8px;
+    }
+    .hero-phones :global(.hp) {
+      width: 170px;
+    }
+  }
+  @media (max-width: 420px) {
+    .hero-phones {
+      height: 340px;
+    }
+    .hero-phones :global(.hp) {
+      width: 128px;
+    }
+  }
+
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    border-top: 1px solid var(--line);
+    border-bottom: 1px solid var(--line);
+  }
+  .stat {
+    padding: 28px 24px 28px 0;
+  }
+  .stat + .stat {
+    padding-left: 24px;
+    border-left: 1px solid var(--line);
+  }
+  .stat-v {
+    font-size: 26px;
+    font-weight: 500;
+    letter-spacing: -0.02em;
+  }
+  .stat-l {
+    margin-top: 4px;
+    font-size: 14px;
+    color: var(--text-2);
+  }
+  @media (max-width: 800px) {
+    .stats {
+      grid-template-columns: 1fr 1fr;
+    }
+    .stat.stat.stat:nth-child(3) {
+      padding-left: 0;
+      border-left: 0;
+    }
+    .stat:nth-child(n + 3) {
+      border-top: 1px solid var(--line);
+    }
+    .stat {
+      padding-block: 22px;
+    }
+    .stat + .stat {
+      padding-left: 16px;
+    }
+    .stat-v {
+      font-size: 20px;
+    }
+  }
+
+  .section-head {
+    margin-bottom: 56px;
+  }
+  .section-head h2 {
+    margin-top: 12px;
+    font-size: clamp(32px, 4.4vw, 56px);
+    line-height: 1.05;
+    max-width: 18ch;
+  }
+  .section-head.small h2 {
+    font-size: clamp(26px, 3vw, 36px);
+  }
+
+  .work {
+    padding-top: 140px;
+  }
+  .project {
+    display: grid;
+    grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+    gap: 56px;
+    align-items: start;
+    padding: 72px 0;
+    border-top: 1px solid var(--line);
+  }
+  .p-info {
+    position: sticky;
+    top: 112px;
+  }
+  .p-num {
+    color: var(--accent);
+  }
+  .project h3 {
+    margin-top: 10px;
+    font-size: clamp(30px, 3.4vw, 44px);
+    line-height: 1.05;
+  }
+  .p-sum {
+    margin-top: 16px;
+    color: var(--text-2);
+    max-width: 46ch;
+  }
+  .p-meta {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    margin: 28px 0 0;
+    font-size: 15px;
+  }
+  .p-meta dt,
+  .p-meta dd {
+    margin: 0;
+    padding: 12px 0;
+    border-top: 1px solid var(--line);
+  }
+  .p-meta dt {
+    color: var(--text-3);
+    padding-right: 32px;
+  }
+  .p-meta dd {
+    text-align: right;
+  }
+  .p-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 28px;
+  }
+
+  .p-visual {
+    background: var(--bg-raised);
+    border: 1px solid var(--line);
+    border-radius: 28px;
+    padding: clamp(24px, 4vw, 56px);
+    overflow: hidden;
+  }
+  .phones {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: clamp(12px, 2vw, 24px);
+    align-items: start;
+  }
+  .phones > :global(.phone:nth-child(2)) {
+    margin-top: 48px;
+  }
+  .phones > :global(.phone:nth-child(3)) {
+    margin-top: 16px;
+  }
+  .k-web .p-visual {
+    padding-right: 0;
+    padding-bottom: 0;
+  }
+  .k-web .p-visual :global(.browser) {
+    border-radius: 14px 0 0 0;
+    border-right: 0;
+    border-bottom: 0;
+  }
+
+  .qr-card {
+    aspect-ratio: 9 / 19.2;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    border-radius: 34px;
+    border: 1px dashed var(--line-strong);
+    padding: 12%;
+  }
+  .qr-cap {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-2);
+    text-align: center;
+  }
+  .qr {
+    width: 100%;
+    aspect-ratio: 1;
+    display: grid;
+    grid-template-columns: repeat(var(--n), 1fr);
+    gap: 1px;
+    padding: 10%;
+    background: var(--text);
+    border-radius: 12px;
+    box-shadow: 0 0 0 6px rgba(200, 241, 105, 0.14);
+  }
+  .qr i {
+    border-radius: 1px;
+  }
+  .qr i.on {
+    background: var(--bg);
+  }
+
+  @media (max-width: 900px) {
+    .work {
+      padding-top: 96px;
+    }
+    .project {
+      grid-template-columns: 1fr;
+      gap: 32px;
+      padding: 56px 0;
+    }
+    .p-info {
+      position: static;
+    }
+    .p-visual {
+      border-radius: 20px;
+    }
+    .phones > :global(.phone:nth-child(2)) {
+      margin-top: 24px;
+    }
+    .phones > :global(.phone:nth-child(3)) {
+      margin-top: 8px;
+    }
+  }
+
+  .backend {
+    padding-top: 72px;
+    border-top: 1px solid var(--line);
+  }
+  .b-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 20px;
+  }
+  .b-card {
+    display: flex;
+    flex-direction: column;
+    background: var(--bg-raised);
+    border: 1px solid var(--line);
+    border-radius: 20px;
+    overflow: hidden;
+  }
+  .b-card :global(.browser) {
+    margin: 16px 16px 0;
+    border-radius: 10px 10px 0 0;
+    border-bottom: 0;
+    box-shadow: none;
+  }
+  .b-card :global(.browser img) {
+    aspect-ratio: 16 / 9;
+    object-fit: cover;
+    object-position: top left;
+  }
+  .b-body {
+    padding: 22px;
+    border-top: 1px solid var(--line);
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+  }
+  .b-body h3 {
+    font-size: 20px;
+  }
+  .b-body > p {
+    margin-top: 8px;
+    font-size: 15px;
+    color: var(--text-2);
+  }
+  .b-stack {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 16px;
+  }
+  .b-links {
+    display: flex;
+    gap: 18px;
+    margin-top: auto;
+    padding-top: 20px;
+    font-size: 15px;
+  }
+  .b-links a {
+    text-decoration: none;
+    color: var(--accent);
+  }
+  .b-links a:hover {
+    text-decoration: underline;
+    text-underline-offset: 4px;
+  }
+  @media (max-width: 900px) {
+    .b-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .exp,
+  .skills {
+    padding-top: 140px;
+  }
+  .exp-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  .exp-item {
+    display: grid;
+    grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+    gap: 56px;
+    padding: 36px 0;
+    border-top: 1px solid var(--line);
+  }
+  .exp-item h3 {
+    font-size: 22px;
+    line-height: 1.25;
+  }
+  .at {
+    color: var(--text-2);
+  }
+  .exp-where {
+    margin-top: 6px;
+    font-size: 15px;
+    color: var(--text-3);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .now {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: var(--accent);
+    color: var(--on-accent);
+  }
+  .exp-item ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: grid;
+    gap: 10px;
+    color: var(--text-2);
+  }
+  .exp-item ul li {
+    position: relative;
+    padding-left: 20px;
+  }
+  .exp-item ul li::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0.8em;
+    width: 8px;
+    height: 1px;
+    background: var(--text-3);
+  }
+  @media (max-width: 800px) {
+    .exp-item {
+      grid-template-columns: 1fr;
+      gap: 16px;
+    }
+  }
+
+  .s-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1px;
+    background: var(--line);
+    border: 1px solid var(--line);
+    border-radius: 20px;
+    overflow: hidden;
+  }
+  .s-group {
+    background: var(--bg);
+    padding: 28px;
+  }
+  .s-group:last-child {
+    grid-column: 1 / -1;
+  }
+  @media (max-width: 900px) {
+    .s-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+  @media (max-width: 600px) {
+    .s-grid {
+      grid-template-columns: 1fr;
+    }
+    .s-group {
+      padding: 22px;
+    }
+  }
+  .s-items {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 16px;
+  }
+  .edu {
+    margin-top: 16px;
+    font-size: 17px;
+  }
+  .edu span {
+    color: var(--text-2);
+    font-size: 15px;
+  }
+
+  .contact {
+    padding-block: 160px 120px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  .contact h2 {
+    margin-top: 16px;
+    font-size: clamp(34px, 5vw, 64px);
+    line-height: 1.04;
+    max-width: 16ch;
+  }
+  .mail {
+    margin-top: 32px;
+    font-size: clamp(18px, 3vw, 30px);
+    color: var(--accent);
+    text-decoration: none;
+    border-bottom: 1px solid rgba(200, 241, 105, 0.35);
+    padding-bottom: 4px;
+    overflow-wrap: anywhere;
+    transition: border-color 0.2s;
+  }
+  .mail:hover {
+    border-color: var(--accent);
+  }
+  .contact .actions {
+    justify-content: center;
+  }
+
+  .foot {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+    padding-block: 28px 40px;
+    border-top: 1px solid var(--line);
+    font-size: 14px;
+    color: var(--text-3);
+  }
+</style>
