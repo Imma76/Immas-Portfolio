@@ -13,6 +13,7 @@ import consult3 from '../assets/projects/consult-3.png';
 import hideout1 from '../assets/projects/hideout-1.jpg';
 import hideout2 from '../assets/projects/hideout-2.jpg';
 import owed from '../assets/projects/owed-1.jpg';
+import soctral from '../assets/projects/soctral-1.jpg';
 import salon from '../assets/projects/salon_booking_app-1.png';
 import nestTodo from '../assets/projects/nest_todo-1.png';
 import sqlBlog from '../assets/projects/nest_blog-1.png';
@@ -53,6 +54,16 @@ export type Project = {
 };
 
 export const projects: Project[] = [
+  {
+    title: 'Soctral',
+    kind: 'web',
+    summary:
+      'Escrow marketplace for buying and selling social media accounts with crypto. I built the backend: a NestJS and MongoDB API for escrow deals, buy and sell orders, disputes, KYC and OTP verification. It runs multi-chain wallets (Bitcoin, Ethereum, Solana, Tron, BNB Chain and Base, including USDT) with encrypted seed storage and transaction PINs, pushes live balance updates over WebSockets, powers trade and support chat with Stream Chat, and is instrumented with OpenTelemetry tracing.',
+    role: 'Backend developer',
+    stack: ['NestJS', 'TypeScript', 'MongoDB', 'Socket.IO', 'Stream Chat', 'ethers.js', 'Solana web3.js', 'OpenTelemetry'],
+    screens: [soctral],
+    links: [{ label: 'Live site', href: 'https://soctral.com' }],
+  },
   {
     title: 'Owed',
     kind: 'web',
