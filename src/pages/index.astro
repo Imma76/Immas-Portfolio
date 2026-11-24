@@ -86,7 +86,7 @@ const year = new Date().getFullYear();
       {projects.map((p, i) => (
         <article class:list={['project', `k-${p.kind}`]} data-reveal>
           <div class="p-info">
-            <p class="p-num eyebrow">{String(i + 1).padStart(2, '0')}{p.year && ` / ${p.year}`}</p>
+            <p class="p-num eyebrow">{String(i + 1).padStart(2, '0')}</p>
             <h3>{p.title}</h3>
             <p class="p-sum">{p.summary}</p>
             {(p.role || p.stack.length > 0) && (
