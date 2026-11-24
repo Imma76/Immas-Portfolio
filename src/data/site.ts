@@ -3,6 +3,7 @@ import type { ImageMetadata } from 'astro';
 import foodNinja1 from '../assets/projects/food_ninja-1.png';
 import foodNinja2 from '../assets/projects/food_ninja-2.png';
 import foodNinja3 from '../assets/projects/food_ninja-3.png';
+import foodNinja4 from '../assets/projects/food_ninja-4.png';
 import allNews1 from '../assets/projects/allnews-1.png';
 import allNews2 from '../assets/projects/allnews-2.png';
 import allNews3 from '../assets/projects/allnews-3.png';
@@ -71,7 +72,7 @@ export const projects: Project[] = [
     year: '2024',
     role: 'Flutter developer',
     stack: ['Flutter', 'Dart'],
-    screens: [foodNinja1, foodNinja2, foodNinja3],
+    screens: [foodNinja1, foodNinja2, foodNinja3, foodNinja4],
   },
   {
     title: 'The Hideout QR Menu',

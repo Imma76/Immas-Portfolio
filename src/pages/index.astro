@@ -4,7 +4,12 @@ import Phone from '../components/Phone.astro';
 import Browser from '../components/Browser.astro';
 import { profile, stats, projects, backendProjects, experience, skills, education } from '../data/site';
 
-const heroScreens = projects.find((p) => p.title === 'Food Ninja')?.screens ?? [];
+const heroScreens = (projects.find((p) => p.title === 'Food Ninja')?.screens ?? []).slice(0, 3);
+
+// Each project phone cycles through all of the project's screens, starting at a
+// different one so the row never shows the same screen twice.
+const rotate = <T,>(arr: T[], start: number) => arr.slice(start).concat(arr.slice(0, start));
+const phoneCount = (n: number) => Math.min(3, n);
 
 // Decorative QR-style grid (21x21) with the three finder squares.
 const N = 21;
@@ -43,13 +48,13 @@ const year = new Date().getFullYear();
   <main id="top">
     <section class="hero wrap">
       <div class="hero-copy">
-        <p class="status"><span class="dot" aria-hidden="true"></span>{profile.availability}</p>
+        <p class="status rise" style="--i:0"><span class="dot" aria-hidden="true"></span>{profile.availability}</p>
         <h1>
-          {profile.headline}<br />
-          <span class="accent">{profile.tagline}</span>
+          <span class="h1-main rise" style="--i:1">{profile.headline}</span><br />
+          <span class="accent rise" style="--i:2">{profile.tagline}</span>
         </h1>
-        <p class="lede">{profile.summary}</p>
-        <div class="actions">
+        <p class="lede rise" style="--i:3">{profile.summary}</p>
+        <div class="actions rise" style="--i:4">
           <a class="btn primary" href={`mailto:${profile.email}`}>Email me</a>
           <a class="btn" href={profile.github} target="_blank" rel="noopener">
             <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 .5a11.5 11.5 0 0 0-3.64 22.41c.58.1.79-.25.79-.56v-2c-3.2.7-3.88-1.37-3.88-1.37-.52-1.33-1.28-1.690-1.28-1.69-1.05-.72.08-.7.08-.7 1.16.08 1.77 1.19 1.77 1.19 1.030 1.77 2.7 1.26 3.36.96.1-.75.4-1.26.73-1.55-2.55-.29-5.24-1.28-5.24-5.69 0-1.26.45-2.29 1.19-3.1-.12-.29-.52-1.46.11-3.05 0 0 .97-.31 3.17 1.18a11 11 0 0 1 5.77 0c2.2-1.49 3.17-1.18 3.17-1.18.63 1.59.23 2.76.11 3.05.74.81 1.19 1.84 1.19 3.1 0 4.42-2.7 5.39-5.26 5.68.41.36.78 1.06.78 2.14v3.17c0 .31.21.67.8.56A11.5 11.5 0 0 0 12 .5Z"/></svg>
@@ -60,10 +65,10 @@ const year = new Date().getFullYear();
             LinkedIn
           </a>
         </div>
-        <p class="loc eyebrow">{profile.location}</p>
+        <p class="loc eyebrow rise" style="--i:5">{profile.location}</p>
       </div>
 
-      <div class="hero-phones" aria-hidden="true">
+      <div class="hero-phones" aria-hidden="true" data-tilt>
         {heroScreens.map((s, i) => <Phone src={s} alt="" class={`hp hp-${i + 1}`} eager />)}
       </div>
     </section>
@@ -71,7 +76,7 @@ const year = new Date().getFullYear();
     <section class="stats wrap" aria-label="At a glance">
       {stats.map((s) => (
         <div class="stat">
-          <p class="stat-v">{s.value}</p>
+          <p class="stat-v" data-count={/^\d/.test(s.value) ? '' : undefined}>{s.value}</p>
           <p class="stat-l">{s.label}</p>
         </div>
       ))}
@@ -110,7 +115,9 @@ const year = new Date().getFullYear();
           <div class="p-visual">
             {p.kind === 'mobile' && p.screens && (
               <div class="phones">
-                {p.screens.map((s, j) => <Phone src={s} alt={`${p.title} screen ${j + 1}`} />)}
+                {Array.from({ length: phoneCount(p.screens.length) }, (_, j) => (
+                  <Phone src={rotate(p.screens!, j)} alt={`${p.title} screen ${j + 1}`} offset={j * 450} />
+                ))}
               </div>
             )}
             {p.kind === 'web' && p.screens && <Browser src={p.screens[0]} alt={`${p.title} screenshot`} />}
@@ -122,7 +129,9 @@ const year = new Date().getFullYear();
                   </div>
                   <p class="qr-cap">Scan at the table</p>
                 </div>
-                {p.screens?.map((s, j) => <Phone src={s} alt={`${p.title} screen ${j + 1}`} />)}
+                {p.screens?.map((_, j) => (
+                  <Phone src={rotate(p.screens!, j)} alt={`${p.title} screen ${j + 1}`} offset={j * 450} />
+                ))}
               </div>
             )}
           </div>
@@ -330,18 +339,61 @@ const year = new Date().getFullYear();
     width: 230px;
     top: 50%;
     left: 50%;
+    transform: var(--fan);
+    /* Mouse tilt rides on the separate translate/rotate properties so it
+       composes with the fan transform instead of replacing it. */
+    translate: calc(var(--mx, 0) * var(--k) * 1px) calc(var(--my, 0) * var(--k) * 1px);
+    rotate: calc(var(--mx, 0) * 1.5deg);
+    transition:
+      translate 0.6s var(--ease),
+      rotate 0.6s var(--ease);
   }
   .hero-phones :global(.hp-1) {
-    transform: translate(-125%, -46%) rotate(-7deg);
+    --fan: translate(-125%, -46%) rotate(-7deg);
+    --k: 10;
+    --j: 0;
     z-index: 1;
   }
   .hero-phones :global(.hp-2) {
-    transform: translate(-50%, -54%);
+    --fan: translate(-50%, -54%);
+    --k: 22;
+    --j: 1;
     z-index: 3;
   }
   .hero-phones :global(.hp-3) {
-    transform: translate(25%, -46%) rotate(7deg);
+    --fan: translate(25%, -46%) rotate(7deg);
+    --k: 16;
+    --j: 2;
     z-index: 2;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .rise {
+      animation: rise 0.9s var(--ease) both;
+      animation-delay: calc(var(--i) * 70ms + 60ms);
+    }
+    .hero-phones :global(.hp) {
+      animation: fan 1.2s var(--ease) both;
+      animation-delay: calc(350ms + var(--j) * 90ms);
+    }
+  }
+  @keyframes rise {
+    from {
+      opacity: 0;
+      transform: translateY(18px);
+    }
+  }
+  @keyframes fan {
+    from {
+      opacity: 0;
+      transform: translate(-50%, -44%) scale(0.92);
+    }
+    30% {
+      opacity: 1;
+    }
+  }
+  .h1-main {
+    display: inline-block;
   }
   @media (max-width: 900px) {
     .hero {
@@ -536,9 +588,34 @@ const year = new Date().getFullYear();
     background: var(--text);
     border-radius: 12px;
     box-shadow: 0 0 0 6px rgba(200, 241, 105, 0.14);
+    position: relative;
+    overflow: hidden;
   }
   .qr i {
     border-radius: 1px;
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .qr::after {
+      content: '';
+      position: absolute;
+      left: 4%;
+      right: 4%;
+      top: 0;
+      height: 3px;
+      border-radius: 2px;
+      background: var(--accent);
+      box-shadow: 0 0 14px 3px rgba(200, 241, 105, 0.65);
+      animation: scan 2.8s ease-in-out infinite;
+    }
+  }
+  @keyframes scan {
+    0%,
+    100% {
+      top: 8%;
+    }
+    50% {
+      top: 90%;
+    }
   }
   .qr i.on {
     background: var(--bg);
@@ -583,6 +660,9 @@ const year = new Date().getFullYear();
     border: 1px solid var(--line);
     border-radius: 20px;
     overflow: hidden;
+    transition:
+      transform 0.35s var(--ease),
+      border-color 0.35s var(--ease);
   }
   .b-card :global(.browser) {
     margin: 16px 16px 0;
@@ -627,9 +707,30 @@ const year = new Date().getFullYear();
     text-decoration: none;
     color: var(--accent);
   }
-  .b-links a:hover {
-    text-decoration: underline;
-    text-underline-offset: 4px;
+  .b-links a span {
+    display: inline-block;
+    transition: transform 0.25s var(--ease);
+  }
+  @media (hover: hover) {
+    .b-links a:hover span {
+      transform: translate(2px, -2px);
+    }
+    .b-card:hover {
+      transform: translateY(-4px);
+      border-color: var(--line-strong);
+    }
+    .p-visual :global(.phone) {
+      transition: transform 0.5s var(--ease);
+    }
+    .p-visual:hover :global(.phone) {
+      transform: translateY(-6px);
+    }
+    .p-visual:hover :global(.phone:nth-child(2)) {
+      transition-delay: 40ms;
+    }
+    .p-visual:hover :global(.phone:nth-child(3)) {
+      transition-delay: 80ms;
+    }
   }
   @media (max-width: 900px) {
     .b-grid {
@@ -768,13 +869,18 @@ const year = new Date().getFullYear();
     font-size: clamp(18px, 3vw, 30px);
     color: var(--accent);
     text-decoration: none;
-    border-bottom: 1px solid rgba(200, 241, 105, 0.35);
-    padding-bottom: 4px;
+    padding-bottom: 6px;
     overflow-wrap: anywhere;
-    transition: border-color 0.2s;
+    /* Two underlines: a faint full-width one, and a solid one that draws in on hover. */
+    background:
+      linear-gradient(var(--accent), var(--accent)) left bottom / 0% 1px no-repeat,
+      linear-gradient(rgba(200, 241, 105, 0.3), rgba(200, 241, 105, 0.3)) left bottom / 100% 1px no-repeat;
+    transition: background-size 0.5s var(--ease);
   }
   .mail:hover {
-    border-color: var(--accent);
+    background-size:
+      100% 1px,
+      100% 1px;
   }
   .contact .actions {
     justify-content: center;
@@ -791,3 +897,59 @@ const year = new Date().getFullYear();
     color: var(--text-3);
   }
 </style>
+
+<script>
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  // Hero phones lean toward the pointer (desktop pointers only).
+  const tilt = document.querySelector<HTMLElement>('[data-tilt]');
+  const hero = tilt?.closest<HTMLElement>('.hero');
+  if (tilt && hero && !reduce && matchMedia('(hover: hover) and (pointer: fine)').matches) {
+    let raf = 0;
+    hero.addEventListener('pointermove', (e) => {
+      cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(() => {
+        const b = hero.getBoundingClientRect();
+        tilt.style.setProperty('--mx', ((e.clientX - b.left) / b.width - 0.5).toFixed(3));
+        tilt.style.setProperty('--my', ((e.clientY - b.top) / b.height - 0.5).toFixed(3));
+      });
+    });
+    hero.addEventListener('pointerleave', () => {
+      tilt.style.setProperty('--mx', '0');
+      tilt.style.setProperty('--my', '0');
+    });
+  }
+
+  // Count numeric stats up from zero the first time they scroll into view.
+  const counters = [...document.querySelectorAll<HTMLElement>('[data-count]')];
+  if (counters.length && !reduce && 'IntersectionObserver' in window) {
+    const run = (el: HTMLElement) => {
+      const final = el.textContent ?? '';
+      const m = final.match(/^(\d+)(.*)$/);
+      if (!m) return;
+      const to = Number(m[1]);
+      const suffix = m[2];
+      const t0 = performance.now();
+      const frame = (t: number) => {
+        const p = Math.min(1, (t - t0) / 1200);
+        const eased = 1 - Math.pow(1 - p, 3);
+        el.textContent = `${Math.round(to * eased)}${suffix}`;
+        if (p < 1) requestAnimationFrame(frame);
+        else el.textContent = final;
+      };
+      requestAnimationFrame(frame);
+    };
+    const io = new IntersectionObserver(
+      (entries) => {
+        for (const e of entries) {
+          if (e.isIntersecting) {
+            run(e.target as HTMLElement);
+            io.unobserve(e.target);
+          }
+        }
+      },
+      { threshold: 0.6 },
+    );
+    counters.forEach((el) => io.observe(el));
+  }
+</script>

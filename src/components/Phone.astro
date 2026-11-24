@@ -3,17 +3,34 @@ import { Image } from 'astro:assets';
 import type { ImageMetadata } from 'astro';
 
 interface Props {
-  src: ImageMetadata;
+  /** One screen, or several to crossfade through (first one shows by default). */
+  src: ImageMetadata | ImageMetadata[];
   alt: string;
   class?: string;
   eager?: boolean;
+  /** Delay before this phone starts cycling, so phones in a row don't switch in sync. */
+  offset?: number;
 }
-const { src, alt, class: cls = '', eager = false } = Astro.props;
+const { src, alt, class: cls = '', eager = false, offset = 0 } = Astro.props;
+const screens = Array.isArray(src) ? src : [src];
+const cycles = screens.length > 1;
 ---
 
-<div class:list={['phone', cls]}>
+<div class:list={['phone', cls]} data-cycle={cycles ? '' : undefined} data-offset={cycles ? offset : undefined}>
   <div class="screen">
-    <Image src={src} alt={alt} widths={[240, 360, 520]} sizes="(max-width: 700px) 40vw, 260px" loading={eager ? 'eager' : 'lazy'} />
+    {
+      screens.map((s, i) => (
+        <Image
+          src={s}
+          alt={i === 0 ? alt : ''}
+          aria-hidden={i === 0 ? undefined : 'true'}
+          class:list={{ on: i === 0 }}
+          widths={[240, 360, 520]}
+          sizes="(max-width: 700px) 40vw, 260px"
+          loading={eager && i === 0 ? 'eager' : 'lazy'}
+        />
+      ))
+    }
   </div>
 </div>
 
@@ -38,9 +55,69 @@ const { src, alt, class: cls = '', eager = false } = Astro.props;
     background: #fff;
   }
   .screen :global(img) {
+    position: absolute;
+    inset: 0;
     width: 100%;
     height: 100%;
     object-fit: cover;
     object-position: top center;
+    opacity: 0;
+    transition: opacity 0.9s var(--ease);
+  }
+  .screen :global(img.on) {
+    opacity: 1;
   }
 </style>
+
+<script>
+  // Crossfade phones that have several screens. Only runs while the phone is on
+  // screen and the tab is visible, and never for reduced-motion users.
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)');
+  const INTERVAL = 3200;
+
+  function start(phone: HTMLElement) {
+    if (phone.dataset.timer) return;
+    const imgs = [...phone.querySelectorAll('img')];
+    const step = () => {
+      if (document.hidden) return;
+      const cur = imgs.findIndex((i) => i.classList.contains('on'));
+      const next = imgs[(cur + 1) % imgs.length];
+      const show = () => {
+        imgs[cur].classList.remove('on');
+        next.classList.add('on');
+      };
+      // Wait for a lazy image to finish loading so we never fade to a blank frame.
+      if (next.complete) show();
+      else next.addEventListener('load', show, { once: true });
+    };
+    const delay = Number(phone.dataset.offset ?? 0);
+    const t = window.setTimeout(() => {
+      step();
+      phone.dataset.timer = String(window.setInterval(step, INTERVAL));
+    }, INTERVAL + delay);
+    phone.dataset.timer = String(t);
+  }
+
+  function stop(phone: HTMLElement) {
+    const t = Number(phone.dataset.timer);
+    if (t) {
+      clearTimeout(t);
+      clearInterval(t);
+    }
+    delete phone.dataset.timer;
+  }
+
+  if (!reduce.matches && 'IntersectionObserver' in window) {
+    const io = new IntersectionObserver((entries) => {
+      for (const e of entries) {
+        const el = e.target as HTMLElement;
+        if (e.isIntersecting) {
+          // Warm up the hidden screens once the phone is near the viewport.
+          el.querySelectorAll('img[loading="lazy"]').forEach((i) => ((i as HTMLImageElement).loading = 'eager'));
+          start(el);
+        } else stop(el);
+      }
+    }, { rootMargin: '100px 0px' });
+    document.querySelectorAll<HTMLElement>('.phone[data-cycle]').forEach((p) => io.observe(p));
+  }
+</script>
