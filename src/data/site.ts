@@ -55,16 +55,6 @@ export type Project = {
 
 export const projects: Project[] = [
   {
-    title: 'Soctral',
-    kind: 'web',
-    summary:
-      'Escrow marketplace for buying and selling social media accounts with crypto. I built the backend: a NestJS and MongoDB API for escrow deals, buy and sell orders, disputes, KYC and OTP verification. It runs multi-chain wallets (Bitcoin, Ethereum, Solana, Tron, BNB Chain and Base, including USDT) with encrypted seed storage and transaction PINs, pushes live balance updates over WebSockets, powers trade and support chat with Stream Chat, and is instrumented with OpenTelemetry tracing.',
-    role: 'Backend developer',
-    stack: ['NestJS', 'TypeScript', 'MongoDB', 'Socket.IO', 'Stream Chat', 'ethers.js', 'Solana web3.js', 'OpenTelemetry'],
-    screens: [soctral],
-    links: [{ label: 'Live site', href: 'https://soctral.com' }],
-  },
-  {
     title: 'Owed',
     kind: 'web',
     summary:
@@ -94,6 +84,16 @@ export const projects: Project[] = [
     stack: ['NestJS', 'TypeScript', 'MongoDB', 'Cloudinary', 'JavaScript'],
     screens: [hideout1, hideout2],
     links: [{ label: 'Live site', href: 'https://www.thehideoutrestroandlakesidelounge.com/' }],
+  },
+  {
+    title: 'Soctral',
+    kind: 'web',
+    summary:
+      'Escrow marketplace for buying and selling social media accounts with crypto. I built the backend outside the blockchain integrations: a NestJS and MongoDB API for escrow deals, buy and sell orders, disputes and appeals, KYC, admin tools, and email and SMS verification. I also built encrypted wallet storage with transaction PINs, live balance updates over WebSockets, trade and support chat on Stream Chat, web push notifications, and OpenTelemetry tracing with logs shipped to DigitalOcean Spaces.',
+    role: 'Backend developer',
+    stack: ['NestJS', 'TypeScript', 'MongoDB', 'Socket.IO', 'Stream Chat', 'Twilio', 'OpenTelemetry', 'Docker'],
+    screens: [soctral],
+    links: [{ label: 'Live site', href: 'https://soctral.com' }],
   },
   {
     title: 'All News',
