@@ -61,10 +61,7 @@ export const projects: Project[] = [
     role: 'Full-stack developer',
     stack: ['Next.js', 'React', 'TypeScript', 'OpenAI API', 'PayPal Invoicing API', 'SQLite', 'Zod'],
     screens: [owed],
-    links: [
-      { label: 'Live demo', href: 'https://owed-rk4d.onrender.com' },
-      { label: 'GitHub', href: 'https://github.com/Imma76/owed' },
-    ],
+    links: [{ label: 'GitHub', href: 'https://github.com/Imma76/owed' }],
   },
   {
     title: 'Food Ninja',
